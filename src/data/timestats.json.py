@@ -10,7 +10,8 @@ import numpy as np
 
 def main():
     data = []
-    rands = np.random.random(1000)
+    gen = np.random.default_rng(seed=42)
+    rands = gen.random(10000)
     for i, rand in enumerate(rands):
         d = datetime.now(UTC) - timedelta(days=i)
         ts = d.isoformat(timespec="seconds")
