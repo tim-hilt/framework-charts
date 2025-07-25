@@ -2,10 +2,6 @@ import * as Plot from "npm:@observablehq/plot";
 import * as d3 from "npm:d3";
 
 /**
- * TODO: Reset to initial zoom with click
- * TODO: Compare with observable
- * TODO: Render only 1000 datapoints in context chart
- *
  * Other improvements:
  * - Virtualization => Render only what you see
  * - Don't load all data at pageload. Only an overview
@@ -123,14 +119,14 @@ export function FocusContextChart(data, width, x, ys) {
 				if (sourceEvent) dispatch.call("timeWindow", wrapper, domain);
 			});
 
-		d3.select(wrapper).call(brush);
+		d3.select(wrapper).call(brush).on("dblclick", focusLastThreeMonths);
 
 		dispatch.on("timeWindow.focus", function (value) {
 			if (this === wrapper) return; // ignore our own message
 			if (value == null) return;
 			domain = value;
 			const b = domain.map(xScale.apply);
-			if (b[0] === x1 && b[1] === x2) {
+			if (b[0] < x1 || b[1] > x2) {
 				d3.select(wrapper).call(brush.clear);
 			} else {
 				d3.select(wrapper).call(brush.move, domain.map(xScale.apply));
@@ -140,26 +136,24 @@ export function FocusContextChart(data, width, x, ys) {
 		return wrapper;
 	}
 
+	function focusLastThreeMonths() {
+		const dataExtent = d3.extent(data, (d) => d.timestamp);
+		const endDate = dataExtent[1];
+		const startDate = new Date(endDate);
+		startDate.setMonth(startDate.getMonth() - 3);
+
+		dispatch.call("timeWindow", "reset", [startDate, endDate]);
+	}
+
 	const focus = createFocus();
 	const context = createContext();
 
-	const container = d3
-		.create("div")
-		.style("display", "flex")
-		.style("flex-direction", "column")
-		.style("gap", "20px")
-		.node();
+	const container = d3.create("div").node();
 
-	// Append both charts to the container
 	container.appendChild(focus);
 	container.appendChild(context);
 
-	const dataExtent = d3.extent(data, (d) => d.timestamp);
-	const endDate = dataExtent[1];
-	const startDate = new Date(endDate);
-	startDate.setMonth(startDate.getMonth() - 3);
-
-	dispatch.call("timeWindow", "reset", [startDate, endDate]);
+	focusLastThreeMonths();
 
 	return container;
 }

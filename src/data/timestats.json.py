@@ -11,7 +11,7 @@ import numpy as np
 def main():
     data = []
     gen = np.random.default_rng(seed=42)
-    rands = gen.random(10000)
+    rands = gen.standard_normal(10000)
     for i, rand in enumerate(rands):
         d = datetime.now(UTC) - timedelta(days=i)
         ts = d.isoformat(timespec="seconds")
